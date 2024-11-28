@@ -12,7 +12,8 @@ influenza_data <- as.data.frame(influenza_data)
 ```
 
 
-
+#Data preprocessing
+#Clean Data
 remove the unnecessary colums
 ```{r}
 metadata_flu<- influenza_data %>% 
