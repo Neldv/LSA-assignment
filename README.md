@@ -50,19 +50,6 @@ distinct_data %>%
   geom_bar(position = "fill") +
   labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative respons count", fill = "vaccine respons") +
   theme_minimal()
-
-noNA_distinct_data <- distinct_data %>% filter(!is.na(vaccine_response))
-
-ggplot(noNA_distinct_data, aes(x = factor(vaccine, levels = c(1, 2, 3, 4, 5, 6, NA)), fill = vaccine_response)) +
-  geom_bar(position = "stack") + # Use position = "dodge" for side-by-side bars
-  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y= "respons count", fill = "vaccine respons") +
-  theme_minimal()
-
-noNA_distinct_data %>%
-  ggplot(aes(x=factor(vaccine, levels = c(1, 2, 3, 4, 5, 6, NA)), fill = vaccine_response)) +
-  geom_bar(position = "fill")+
-  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y= "relative respons count", fill = "vaccine respons") +
-  theme_minimal()
 ```
 
 
