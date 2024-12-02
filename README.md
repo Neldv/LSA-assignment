@@ -99,5 +99,20 @@ ggplot(aes(x=factor (vaccine,levels = c(1,2,4,NA)), fill = vaccine_response)) +
 geom_bar(position = "fill") +
 theme_classic()
 ```
+## Fisher test
+```{r}
+contingency_table <- table(distinct_data$vaccine, distinct_data$vaccine_response)
+
+contingency_table <- contingency_table[, colnames(contingency_table) != "NULL"]
+contingency_table <- contingency_table[rownames(contingency_table) != "6", ]
+contingency_table <- contingency_table[rownames(contingency_table) != "NULL", ]
+contingency_table <- contingency_table[rownames(contingency_table) != "5", ]
+contingency_table <- contingency_table[rownames(contingency_table) != "3", ]
+contingency_table <- contingency_table[rownames(contingency_table) != "2", ]
 
 
+print(contingency_table)
+
+fisher.test(contingency_table)
+
+```
