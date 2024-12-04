@@ -1,6 +1,6 @@
 # LSA-assignment
 
-First, we're going to read in the data and look at the first 20 columns. We also ask for the class of the input per column, as this is quite important for further processing.
+First, we're going to read in the data and look at the first 20 columns. We also ask for the columns names and the class of the input per column, as this is quite important for further processing.
 
 ```{r}
 library(tidyverse)
@@ -12,6 +12,9 @@ influenza_data <- read_csv("C:/Users/banou/Desktop/Documents/09 universiteit gen
 
 influenza_data <- as.data.frame(influenza_data)
 head(influenza_data,20)
+
+colnames(data)
+
 str(influenza_data)
 ```
 We notice that some of the data isn't in the class that we want. Change the data to the right class. We're going to read it in again and immediately specify the column types. 
@@ -33,8 +36,6 @@ The first issue we encounter when looking the first 20 rows is that every patien
 
 making a subset:
 
-#Data preprocessing
-#Clean Data
 split data into metadata, select the rows that lead to the duplications.
 ```{r}
 metadata_flu<- influenza_data %>% 
@@ -72,6 +73,94 @@ check if everything is good
 ```{r}
 summary(distinct_data)
 ```
+** we move on with the data exploration**
+```{r}
+install.packages("skimr")
+library(skimr)
+
+skim(distinct_data)
+```
+Visualize distributions for numerical variables
+```{r}
+numeric_vars <- distinct_data %>% select(where(is.numeric))
+for (col in colnames(numeric_vars)) {
+  plot_num <- ggplot(distinct_data, aes_string(x = col)) + 
+    geom_histogram(bins = 30, fill = "skyblue", alpha = 0.7) +
+    ggtitle(paste("Distribution of", col)) +
+    theme_minimal() +
+    labs(x = col, y = "Frequency")
+  
+  print(plot_num)  # Explicitly print the ggplot object
+}
+
+```
+The feedback of R tells us there are variables that are not numeric in the numeric columns. This indicates the presence of NAs. We should investigate this further
+
+```{r}
+ #Function to check for NA, empty strings, and NULL in all columns
+check_na_null_empty <- function(distinct_data) {
+  results <- data.frame(
+    Column = colnames(distinct_data),
+    NACount = sapply(distinct_data, function(x) sum(is.na(x))),  # Count NA values
+    EmptyCount = sapply(distinct_data, function(x) sum(x == "")),  # Count empty strings
+    NULLDetected = sapply(distinct_data, function(x) any(is.null(x))),  # Check for NULL
+    stringsAsFactors = FALSE
+  )
+  
+  print(results)
+}
+
+# Usage example
+check_na_null_empty(distinct_data)
+
+```
+We should also check if there are outliers 
+```{r}
+for (col in colnames(numeric_vars)) {
+  print(ggplot(distinct_data, aes_string(x = col)) + 
+          geom_boxplot(fill = "coral", alpha = 0.7) +
+          ggtitle(paste("Boxplot for", col)) +
+          theme_minimal() +
+          labs(x = col, y = "Value"))
+}
+```
+```{r}
+cor_matrix <- cor(numeric_vars, use = "complete.obs")
+print(cor_matrix)
+```
+```{r}
+
+# Heatmap of correlations
+library(corrplot)
+corrplot(cor_matrix, method = "color", type = "upper", tl.col = "black", tl.srt = 45)
+
+
+```
+Visualize distributions for categorical variables
+```{r}
+categorical_vars <- distinct_data %>% select(where(is.factor))
+for (col in colnames(categorical_vars)) {
+  plot_cat <- ggplot(distinct_data , aes_string(x = col)) + 
+    geom_bar(fill = "salmon", alpha = 0.7) +
+    ggtitle(paste("Distribution of", col)) +
+    theme_minimal() +
+    labs(x = col, y = "Count")
+  
+  print(plot_cat)
+}
+```
+Check for missing values
+```{r}
+missing_summary <- distinct_data %>%
+  summarise(across(everything(), ~sum(is.na(.)))) %>%
+  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Missing_values") %>%
+  mutate(Missing_percentage = (Missing_values / nrow(distinct_data)) *100 ) %>%
+  arrange(desc(Missing_percentage))
+
+print(missing_summary)
+  
+
+
 
 #Research question 1: difference in vaccine response between vaccine type
 ## visualisation
