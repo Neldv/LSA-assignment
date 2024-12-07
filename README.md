@@ -149,18 +149,6 @@ for (col in colnames(categorical_vars)) {
   print(plot_cat)
 }
 ```
-Check for missing values
-```{r}
-missing_summary <- distinct_data %>%
-  summarise(across(everything(), ~sum(is.na(.)))) %>%
-  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Missing_values") %>%
-  mutate(Missing_percentage = (Missing_values / nrow(distinct_data)) *100 ) %>%
-  arrange(desc(Missing_percentage))
-
-print(missing_summary)
-  
-
-
 
 #Research question 1: difference in vaccine response between vaccine type
 ## visualisation
