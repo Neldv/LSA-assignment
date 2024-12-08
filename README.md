@@ -204,6 +204,14 @@ HYPOTHESIS TESTING
 HYPOTHESE 2  Do people with a healthy weight have higher CD4 t cell count than people that are overweight?
 first we're going to make a dataframe that contains only the columns about cd4 t cell count and bmi
 
+HYPOTHESIS TESTING
+
+hypothese 2 : 
+
+
+hypothesis 2 : Do people with a healthy weight have higher CD4 t cell count than people that are overweight?
+first we're going to make a dataframe that contains only the columns about cd4 t cell count and bmi
+
 ```{r}
 # Select columns from each dataframe
 
@@ -253,138 +261,61 @@ cd4_bmicat <- cd4_bmi_cleaned %>%
   mutate(BMI_category = case_when(
     bmi < 18.5 ~ "underweight",
     bmi >= 18.5 & bmi < 25 ~ "healthy",
-    bmi >= 25 ~"overweight"
+    bmi >= 25 & bmi < 30 ~ "overweight",
+    bmi >= 30 ~ "obese"
   ))
+
 
 cd4_bmicat$BMI_category<- as.factor(cd4_bmicat$BMI_category)
 head(cd4_bmicat)
 summary(cd4_bmicat)
 
 ```
-As we're only going to compare healthy weight to overweight, we're taking the patients with 'underweight' out of the dataset. 
-```{r}
-
-cd4_bmicat <- cd4_bmicat[cd4_bmicat$BMI_category != "underweight", ]
-```
-
-```{r}
-# Plot Histogram for the dummy data
-ggplot(cd4_bmi_cleaned, aes(x = data))+
-  geom_histogram(binwidth = 0.3,
-                 fill = "lightgrey")+
-  # Plot the actual normal distribution
-  stat_function(fun = function(x){dnorm(x, mean = mean(cd4_bmi_cleaned$data), 
-                                        sd = sd(cd4_bmi_cleaned$data))* bw * length(cd4_bmi_cleaned$data)},
-                color = "yellow",
-                size = 1)+
-  # Adjust the theme
-  theme_classic()+
-  ggtitle("CD4 T cells percentage of parent population")+
-  ylab("Abundance")
-```
-```{r}
-
-ggqqplot(cd4_bmi_cleaned$data)+
-  ggtitle("CD4 T cells percentage of parent population")
-```
-```{r}
-
-ggqqplot(cd4_bmi_cleaned$bmi)+
-  ggtitle("bmi")
-```
-```{r}
-ggqqplot((cd4_bmicat%>%filter(BMI_category=="healthy"))$data)+
-  ggtitle("CD4 T cells percentage of parent population in healthy people")
-ggqqplot((cd4_bmicat%>%filter(BMI_category=="overweight"))$data)+
-  ggtitle("CD4 T cells percentage of parent population in overweight people")
-```
 
 
-```{r}
-# 1) Center and spread of MYC expression
-CD4_per_cat<-cd4_bmicat%>%
-  group_by(BMI_category)%>%
-  summarise(MeanData = mean(data),
-            sdData = sd(data))
-CD4_per_cat
-```
+Is a significant difference observed in systolic blood pressure when comparing all 4 age categories, as defined above?
 
-```{r}
-ggplot(CD4_per_cat, aes(x = BMI_category, y = MeanData, fill = BMI_category))+
-  geom_col()+
-  geom_errorbar(aes(ymin = MeanData - sdData,
-                    ymax = MeanData + sdData),
-                col = "grey30",
-                width = 0.2)+
-  theme_classic()+
-  xlab("BMI category")+
-  ylab("Average percentage of CD4 t cells")+
-  scale_fill_brewer(palette= "Accent")+
-  theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(), legend.position = "none")
-```
+1) Formulate the **nulll** and **alternative** hypothesis. Select the **adequate statistical test** and **explain**. 
 
-```{r}
-# Calculate IQR
-IQR(cd4_bmi_cleaned$data)
-# Visualize in boxplot
-ggplot(cd4_bmi_cleaned, mapping=aes(y = data,
-                            x = 1))+
-  geom_boxplot(width = 0.2)+
-  # Add data points
-  geom_jitter(position=position_jitter(0.1),cex=1.2,
-              col = "palevioletred1")+
-  theme_classic()+
-  ylab("percentage of CD4 t cells")+
-  scale_fill_brewer(palette= "Accent")+
-  # Remove unnecessary elements
-  theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(),
-        axis.title.x = element_blank(), axis.text.x = element_blank())
-```
-```{r BP_NormDist_1}
-# QQ plot
-ggqqplot(cd4_bmicat$data) +
-  ylim(0,100)
-```
-it looks like the data is normally distributed, there are no heavy tails, only a little deviation on the extremities.
+ANSWER:
 
-```{r}
+-   Univariate data (BMI categories): four groups groups,independent groups (unpaired data)
+-   Quantitative data (percentage CD4 tcells)
+    - Normally distributed after filtering
+    
+$\rightarrow$ **One-way ANOVA**
+
+$H_0:$ There is no difference in percentage CD4 tcells between the four BMI categories
+
+$H_A:$ There is a difference in percentage CD4 tcells between the four BMI categories
+
+2) Perform the selected test. Report your findings in an appropriate way.
+
+```{r EX5_2}
+
+Anova_cd4_bmi<-aov(data ~ BMI_category,
+                   data = cd4_bmicat)
+
+Anova_cd4_bmi
+
+summary(Anova_cd4_bmi)
+
 # Calculate the replicates in each group
 cd4_bmicat%>%
-  group_by(BMI_category
-  )%>%
+  group_by(BMI_category)%>%
   summarise(Total = n())
 ```
 
-All observations are obtained from different individuals, therefore we can conclude that the groups are indepents. We'll test 2 groups : Healthy weight and overweight.
+**CONCLUSION:**
 
-=> two sample t-test is the adequate statistical test
+A **one-way ANOVA test** with significance level $\alpha$ of **0.05** indicated that the difference in **percentage of CD4 t cells** between the BMI categories is significant. A **p-value of 0.00723** was observed, indicating that, based on our data, the null hypothesis can be rejected.
 
-```{r}
-T_cd4_bmi <- t.test(data ~ BMI_category,
-     data = cd4_bmicat)
-T_cd4_bmi
-
-# Extract the exact p-value
-T_cd4_bmi$p.value
-
-# Extract the exact t statistic
-T_cd4_bmi$statistic
-
-# Calculate the exact difference, only the estimates of the means
-# of both groups are stored in the outcome of the t test
-T_cd4_bmi$estimate
-T_cd4_bmi$estimate[1]-T_cd4_bmi$estimate[2]
-
-# Extract the confidence interval
-T_cd4_bmi$conf.int
-```
-The two-sample t test(**two-tailed**, **unpaired**) with significance level of 0.05 indicated that the difference in percentage of CD4 t cells does not significantly differ between people that have a healthy weight(n=176) and people that are overweight(n=100).A difference of **-0.967** (95% CI: **-2.85 to 0.92**) was observed when comparing people with a healthy weight (mean=55.18) to overweight people (mean=56.15). The p value is 0.31 which means that the null hypothesis cannot be rejected.
+Make a visualisation:
 
 ```{r}
-ggplot(cd4_bmicat, aes(x=BMI_category, y= data, fill=BMI_category))+
+cd4_bmicat %>%
+  ggplot(aes(x=BMI_category, y=data, fill=BMI_category))+
   geom_boxplot()+
   theme_classic()+
-  ylab("Percentage of CD4 T cells")+
   theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(), legend.position = "none")
-```
-```
+````
