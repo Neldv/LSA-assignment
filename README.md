@@ -202,7 +202,7 @@ fisher.test(contingency_table)
 HYPOTHESIS TESTING
 
 hypothesis 2 : Do people with a healthy weight have higher CD4 t cell count than people that are overweight?
-first we're going to make a dataframe that contains only the columns about cd4 t cell count and bmi
+First we're going to make a dataframe that contains only the columns about cd4 t cell count and bmi
 
 ```{r}
 # Select columns from each dataframe
@@ -260,7 +260,7 @@ cd4_bmi_cleaned%>%
   labs(title = "Histogram of CD4+ T cell percentage of parent population in the patient", x = "CD4+ T cell percentage of parent population", y="Frequency")+
   theme_minimal()
 ```
-We're going to divide the BMI numbers in groups according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25<= BMI)
+We're going to divide the BMI numbers in categories according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25<= BMI)
 
 ```{r}
 cd4_bmicat <- cd4_bmi_cleaned %>%
@@ -277,10 +277,11 @@ summary(cd4_bmicat)
 
 ```
 
-In this hypothesis we are going to compare individuals with a healthy weight to individuals that are overweight. Individuals that are underweight are not part of our hypothesis so we will take them out of the dataframe.
+In this hypothesis we are going to compare individuals with a healthy weight to individuals that are overweight. Individuals that are underweight are not part of our hypothesis so we will take them out of the dataframe. 
 ```{r}
 cd4_hvso <- cd4_bmicat %>%
   filter(BMI_category != "underweight")
+#hvso = Healthy VS Overweight
 ```
 
 
