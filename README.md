@@ -201,9 +201,6 @@ fisher.test(contingency_table)
 
 HYPOTHESIS TESTING
 
-HYPOTHESE 2  Is there a difference in CD4 t cell percentage across BMI categories, in other words, do BMI categories influence the percentage of Cd4 t cells present in vaccinated individuals.
-
-
 hypothesis 2 : Do people with a healthy weight have higher CD4 t cell count than people that are overweight?
 first we're going to make a dataframe that contains only the columns about cd4 t cell count and bmi
 
@@ -213,7 +210,7 @@ first we're going to make a dataframe that contains only the columns about cd4 t
 cd4_data <- metadata_flu %>% filter(name_formatted == "CD4_pos_T_cells" )
 
 
-
+#All measurements for CD4 T cells are in the same unit : % of parent cell population, therefore we won't include this column in our new dataframe.
 cd4_df <- cd4_data %>% select(donor_id, name_formatted, data)
 bmi_df<- distinct_data %>% select(donor_id, bmi)
 
@@ -225,10 +222,11 @@ head(cd4_bmi_df)
 summary (cd4_bmi_df)
 ```
 
-some don't have data for bmi, 
+some don't have data for bmi.
 ```{r}
 mean(is.na(cd4_bmi_df$bmi))
 ```
+24.8% of the individuals with a measurement for CD4+ T cell have not reported their BMI. We suspect this is mostely due to recall bias as some people don't know their length/weight. 
 
 ```{r}
 install.packages("naniar")  # If not already installed
@@ -238,13 +236,13 @@ library(naniar)
 vis_miss(cd4_bmi_df) 
 ```
 
-
+we're going to take out all the individuals that miss the BMI value, as this is not useful for our hypothesis.
 
 ```{r}
 cd4_bmi_cleaned <- cd4_bmi_df[!is.na(cd4_bmi_df$bmi), ]
 summary(cd4_bmi_cleaned)
 ```
-First we'll look at the range of the data. The maximul value for BMI is 46.89 and the minimum value is 13.12, both are plausible for BMI. the 'data' column, which contains the value for the percentage of parent cell population that is CD4 T cells, should be between 0 and 100, as its expressed in %. This is the case, so we conclude that neither column has outliers that are suspicious.
+First we'll look at the range of the data. The maximum value for BMI is 46.89 and the minimum value is 13.12, both are plausible for BMI. the 'data' column, which contains the value for the percentage of parent cell population that is CD4 T cells, should be between 0 and 100, as its expressed in %. This is the case, so we conclude that neither column has outliers that are suspicious. Below, both distributions are visualised.
 
 
 ```{r}
@@ -262,15 +260,14 @@ cd4_bmi_cleaned%>%
   labs(title = "Histogram of CD4+ T cell percentage of parent population in the patient", x = "CD4+ T cell percentage of parent population", y="Frequency")+
   theme_minimal()
 ```
-We're going to divide the BMI numbers in groups according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25=<BMI<30) and obese (BMI>=30)
+We're going to divide the BMI numbers in groups according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25<= BMI)
 
 ```{r}
 cd4_bmicat <- cd4_bmi_cleaned %>%
   mutate(BMI_category = case_when(
     bmi < 18.5 ~ "underweight",
     bmi >= 18.5 & bmi < 25 ~ "healthy",
-    bmi >= 25 & bmi < 30 ~ "overweight",
-    bmi >= 30 ~ "obese"
+    bmi >= 25 ~ "overweight"
   ))
 
 
@@ -280,69 +277,50 @@ summary(cd4_bmicat)
 
 ```
 
--   Univariate data (BMI categories): four groups groups,independent groups (unpaired data)
--   Quantitative data (percentage CD4 tcells)
-    - Normally distributed after filtering
-    ==> **One-way ANOVA**
-
-$H_0:$ There is no difference in percentage CD4 tcells between the four BMI categories
-
-$H_A:$ There is a difference in percentage CD4 tcells between the four BMI categories
-
-We have univariate data and quantitative data so we're going to do an ANOVA test. This is only allowed when the data is normally distributed and the variances are approximately equal across the BMI categories. These conditions will be tested first.
-
-Normality testing
-
+In this hypothesis we are going to compare individuals with a healthy weight to individuals that are overweight. Individuals that are underweight are not part of our hypothesis so we will take them out of the dataframe.
 ```{r}
-shapiro.test(cd4_bmicat$data[cd4_bmicat$BMI_category == "underweight"])
-shapiro.test(cd4_bmicat$data[cd4_bmicat$BMI_category == "healthy"])
-shapiro.test(cd4_bmicat$data[cd4_bmicat$BMI_category == "overweight"])
-shapiro.test(cd4_bmicat$data[cd4_bmicat$BMI_category == "obese"])
-
+cd4_hvso <- cd4_bmicat %>%
+  filter(BMI_category != "underweight")
 ```
-p-value > 0.05: The data is approximately normal for that category.
-p-value ≤ 0.05: The data significantly deviates from normality.
 
-From the Shapiro-Wilk test we can conclude that the data for every category is approximately normal for each category as the p value is always above 0.05.
-The distribution of the data will be visualised below.
+
 
 
 ```{r}
-ggqqplot((cd4_bmicat%>%filter(BMI_category=="underweight"))$data)+
-  ggtitle("CD4 T cells percentage of parent population in underweight people")
-ggqqplot((cd4_bmicat%>%filter(BMI_category=="healthy"))$data)+
+ggplot(cd4_hvso, aes(x = data))+
+  geom_histogram(binwidth = 0.3,
+                 fill = "lightgrey")+
+  # Plot the actual normal distribution
+  stat_function(fun = function(x){dnorm(x, mean = mean(cd4_hvso$data), 
+                                        sd = sd(cd4_hvso$data))* bw * length(cd4_hvso$data)},
+                color = "yellow",
+                size = 1)+
+  # Adjust the theme
+  theme_classic()+
+  ggtitle("CD4 T cells percentage of parent population")+
+  ylab("Abundance")
+```
+
+
+```{r}
+install.packages("ggpubr")
+library(ggpubr)
+ggqqplot(cd4_hvso$data)+
+  ggtitle("CD4 T cells percentage of parent population")
+```
+
+
+```{r}
+ggqqplot((cd4_hvso%>%filter(BMI_category=="healthy"))$data)+
   ggtitle("CD4 T cells percentage of parent population in healthy people")
-ggqqplot((cd4_bmicat%>%filter(BMI_category=="overweight"))$data)+
+ggqqplot((cd4_hvso%>%filter(BMI_category=="overweight"))$data)+
   ggtitle("CD4 T cells percentage of parent population in overweight people")
-ggqqplot((cd4_bmicat%>%filter(BMI_category=="obese"))$data)+
-  ggtitle("CD4 T cells percentage of parent population in obese people")
 ```
 
 
 ```{r}
-ggplot(cd4_bmicat, aes(sample = data)) +
-  stat_qq() +
-  stat_qq_line() +
-  facet_wrap(~BMI_category, scales = "free") +
-  labs(title = "Q-Q Plot for Normality Check",
-       x = "Theoretical Quantiles",
-       y = "Sample Quantiles")
-```
-
-```{r}
-# Histogram for each BMI category
-ggplot(cd4_bmicat, aes(x = data)) +
-  geom_histogram(bins = 10, fill = "coral", color = "black") +
-  facet_wrap(~BMI_category, scales = "free") +
-  labs(title = "Histogram of CD4 Percentage by BMI Category",
-       x = "CD4 Percentage",
-       y = "Frequency")
-```
-Variance testing
-
-```{r}
-# 1) Center and spread of MYC expression
-CD4_per_cat<-cd4_bmicat%>%
+# 1) Center and spread of CD4 T cell count
+CD4_per_cat<-cd4_hvso%>%
   group_by(BMI_category)%>%
   summarise(MeanData = mean(data),
             sdData = sd(data))
@@ -350,56 +328,80 @@ CD4_per_cat
 ```
 
 ```{r}
-library(car)
-
-# Perform Levene's test
-leveneTest(data ~ BMI_category, data = cd4_bmicat)
-```
-
-Levene’s p-value > 0.05: The variances are approximately equal (homogeneous).
-Levene’s p-value ≤ 0.05: Variances differ significantly (heterogeneous).
-
-The p value is higher than 0.05 (0.30), therefore we conclude that the variance is approximately equal across all categories.
-
-The two conditions are fullfilled, so we can perform the ANOVA test
-
-
-2) Perform the selected test. Report your findings in an appropriate way.
-
-```{r EX5_2}
-
-Anova_cd4_bmi<-aov(data ~ BMI_category,
-                   data = cd4_bmicat)
-
-Anova_cd4_bmi
-
-summary(Anova_cd4_bmi)
-
-# Calculate the replicates in each group
-cd4_bmicat%>%
-  group_by(BMI_category)%>%
-  summarise(Total = n())
-```
-
-**CONCLUSION:**
-
-A **one-way ANOVA test** with significance level $\alpha$ of **0.05** indicated that the difference in **percentage of CD4 t cells** between the BMI categories is significant. A **p-value of 0.00723** was observed, indicating that, based on our data, the null hypothesis can be rejected.
-
-Make a visualisation:
-
-```{r}
-cd4_bmicat %>%
-  ggplot(aes(x=BMI_category, y=data, fill=BMI_category))+
-  geom_boxplot()+
+ggplot(CD4_per_cat, aes(x = BMI_category, y = MeanData, fill = BMI_category))+
+  geom_col()+
+  geom_errorbar(aes(ymin = MeanData - sdData,
+                    ymax = MeanData + sdData),
+                col = "grey30",
+                width = 0.2)+
   theme_classic()+
+  xlab("BMI category")+
+  ylab("Average percentage of CD4 t cells")+
+  scale_fill_brewer(palette= "Accent")+
   theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(), legend.position = "none")
 ```
 
-The ANOVA showed a significant result (p-value < 0.05), so we'll conduct a post-hoc test to identify which specific BMI categories differ. The tukey test makes pairwise comparisons and automatically corrects for multiple testing. The p value that is given can be interpretted towards the normal treshold of 0.05.
+```{r}
+# Calculate IQR
+IQR(cd4_bmi_cleaned$data)
+# Visualize in boxplot
+ggplot(cd4_bmi_cleaned, mapping=aes(y = data,
+                            x = 1))+
+  geom_boxplot(width = 0.2)+
+  # Add data points
+  geom_jitter(position=position_jitter(0.1),cex=1.2,
+              col = "palevioletred1")+
+  theme_classic()+
+  ylab("percentage of CD4 t cells")+
+  scale_fill_brewer(palette= "Accent")+
+  # Remove unnecessary elements
+  theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(),
+        axis.title.x = element_blank(), axis.text.x = element_blank())
+```
+```{r BP_NormDist_1}
+# QQ plot
+ggqqplot(cd4_hvso$data) +
+  ylim(0,100)
+```
+it looks like the data is normally distributed, there are no heavy tails, only a little deviation on the extremities.
 
 ```{r}
-tukey_result <- TukeyHSD(Anova_cd4_bmi)
-print(tukey_result)
+# Calculate the replicates in each group
+cd4_hvso%>%
+  group_by(BMI_category
+  )%>%
+  summarise(Total = n())
 ```
-Based on the post-hoc Tukey test we can conclude that there is only a significant difference between the categories underweight and healthy (p value = 0.0034) with a confidence interval (95%) of [1.066,7.333].
 
+All observations are obtained from different individuals, therefore we can conclude that the groups are independent. We'll test 2 groups : Healthy weight and overweight.
+
+=> two sample t-test is the adequate statistical test
+
+```{r}
+T_cd4_bmi <- t.test(data ~ BMI_category,
+     data = cd4_hvso)
+T_cd4_bmi
+
+# Extract the exact p-value
+T_cd4_bmi$p.value
+
+# Extract the exact t statistic
+T_cd4_bmi$statistic
+
+# Calculate the exact difference, only the estimates of the means
+# of both groups are stored in the outcome of the t test
+T_cd4_bmi$estimate
+T_cd4_bmi$estimate[1]-T_cd4_bmi$estimate[2]
+
+# Extract the confidence interval
+T_cd4_bmi$conf.int
+```
+The two-sample t test(**two-tailed**, **unpaired**) with significance level of 0.05 indicated that the difference in percentage of CD4 t cells does not significantly differ between people that have a healthy weight(n=176) and people that are overweight(n=100).A difference of **-0.967** (95% CI: **-2.85 to 0.92**) was observed when comparing people with a healthy weight (mean=55.18) to overweight people (mean=56.15). The p value is 0.31 which means that the null hypothesis cannot be rejected.
+
+```{r}
+ggplot(cd4_hvso, aes(x=BMI_category, y= data, fill=BMI_category))+
+  geom_boxplot()+
+  theme_classic()+
+  ylab("Percentage of CD4 T cells")+
+  theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(), legend.position = "none")
+``
