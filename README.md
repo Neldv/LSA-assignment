@@ -236,7 +236,7 @@ library(naniar)
 vis_miss(cd4_bmi_df) 
 ```
 
-we're going to take out all the individuals that miss the BMI value, as this is not useful for our hypothesis.
+We're going to take out all the individuals that miss the BMI value, as this is not useful for our hypothesis.
 
 ```{r}
 cd4_bmi_cleaned <- cd4_bmi_df[!is.na(cd4_bmi_df$bmi), ]
@@ -320,7 +320,7 @@ ggqqplot((cd4_hvso%>%filter(BMI_category=="overweight"))$data)+
 
 
 ```{r}
-# 1) Center and spread of CD4 T cell count
+# Center and spread of CD4 T cell count
 CD4_per_cat<-cd4_hvso%>%
   group_by(BMI_category)%>%
   summarise(MeanData = mean(data),
@@ -364,7 +364,7 @@ ggplot(cd4_bmi_cleaned, mapping=aes(y = data,
 ggqqplot(cd4_hvso$data) +
   ylim(0,100)
 ```
-it looks like the data is normally distributed, there are no heavy tails, only a little deviation on the extremities.
+It looks like the data is normally distributed, there are no heavy tails, only a little deviation on the extremities.
 
 ```{r}
 # Calculate the replicates in each group
