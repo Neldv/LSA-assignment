@@ -370,7 +370,10 @@ leveneTest(data ~ BMI_category, data = cd4_hvso)
 Levene’s p-value > 0.05: The variances are approximately equal (homogeneous).
 Levene’s p-value ≤ 0.05: Variances differ significantly (heterogeneous).
 
-The p value is higher than 0.05 (0.21), therefore we conclude that the variance is approximately equal across all categories.
+The p value is higher than 0.05 (0.21), therefore we conclude that the variance is approximately equal across all categories. Visualisation below.
+
+
+
 
 
 ```{r}
@@ -404,7 +407,7 @@ ggplot(cd4_bmi_cleaned, mapping=aes(y = data,
   theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(),
         axis.title.x = element_blank(), axis.text.x = element_blank())
 ```
-
+The datas complies with all conditions, we can proceed with the two sample t test.
 
 
 ```{r}
