@@ -253,7 +253,7 @@ First we'll look at the range of the data. The maximum value for BMI is 46.89 an
 ```{r}
 cd4_bmi_cleaned%>%
   ggplot(aes(x= bmi))+
-  geom_histogram(binwidth = 0.5, fill ='steelblue', color="black")+
+  geom_histogram(binwidth = 0.5, fill ='darkseagreen', color="black")+
   labs(title = "Histogram of BMI", x = "BMI", y="Frequency")+
   theme_minimal()
 ```
@@ -261,7 +261,7 @@ cd4_bmi_cleaned%>%
 ```{r}
 cd4_bmi_cleaned%>%
   ggplot(aes(x= data))+
-  geom_histogram(binwidth = 0.5, fill ='steelblue', color="black")+
+  geom_histogram(binwidth = 0.5, fill ='darkseagreen4', color="black")+
   labs(title = "Histogram of CD4+ T cell percentage of parent population in the patient", x = "CD4+ T cell percentage of parent population", y="Frequency")+
   theme_minimal()
 ```
@@ -342,7 +342,7 @@ ggplot(cd4_hvso, aes(sample = data)) +
 ```{r}
 # Histogram for each BMI category
 ggplot(cd4_hvso, aes(x = data)) +
-  geom_histogram(bins = 10, fill = "coral", color = "black") +
+  geom_histogram(bins = 10, fill = "lightsalmon", color = "black") +
   facet_wrap(~BMI_category, scales = "free") +
   labs(title = "Histogram of CD4 Percentage by BMI Category",
        x = "CD4 Percentage",
@@ -386,7 +386,7 @@ ggplot(CD4_per_cat, aes(x = BMI_category, y = MeanData, fill = BMI_category))+
   theme_classic()+
   xlab("BMI category")+
   ylab("Average percentage of CD4 t cells")+
-  scale_fill_brewer(palette= "Accent")+
+  scale_fill_brewer(palette= "Pastel2")+
   theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(), legend.position = "none")
 ```
 
@@ -434,7 +434,8 @@ The two-sample t test(**two-tailed**, **unpaired**) with significance level of 0
 ```{r}
 ggplot(cd4_hvso, aes(x=BMI_category, y= data, fill=BMI_category))+
   geom_boxplot()+
-  theme_classic()+
+  theme_minimal()+
+  scale_fill_brewer(palette= "Pastel2")+
   ylab("Percentage of CD4 T cells")+
   theme(axis.ticks.x = element_blank(), axis.line.x = element_blank(), legend.position = "none")
 ```
