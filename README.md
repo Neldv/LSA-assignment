@@ -149,11 +149,14 @@ for (col in colnames(categorical_vars)) {
   print(plot_cat)
 }
 ```
+##HYPOTHESIS TESTING
 
-#Research question 1: difference in vaccine response between vaccine type
+###Research question 1: 
+hypothesis 1: difference in vaccine response between vaccine type
+
 For this research question, we want to see if there is a difference in the abundance of a high vaccine response for the different vaccines that are given. Both the vaccine type and vaccine response are categorical variables. 
 
-## visualisation
+**visualisation**
 ```{r}
 ggplot(distinct_data, aes(x = factor(vaccine, levels = c(1, 2, 3, 4, 5, 6, NA)), fill = vaccine_response)) +
   geom_bar(position = "stack") + # Use position = "dodge" for side-by-side bars
@@ -185,7 +188,7 @@ geom_bar(position = "fill") +
 labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative response count", fill = "vaccine response") +
   theme_minimal()
 ```
-## Fisher test
+**Fisher test**
 ```{r}
 contingency_table <- table(distinct_data$vaccine, distinct_data$vaccine_response)
 
@@ -205,16 +208,7 @@ fisher.test(contingency_table)
 
 
 
-
-
-
-HYPOTHESIS TESTING
-
-HYPOTHESIS TESTING
-
-hypothese 2 : 
-
-
+###Research question 2
 hypothesis 2 : Do people with a healthy weight have higher CD4 t cell count than people that are overweight?
 first we're going to make a dataframe that contains only the columns about cd4 t cell count and bmi.
 
