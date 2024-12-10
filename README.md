@@ -172,7 +172,7 @@ distinct_data %>%
   labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative response count", fill = "vaccine response") +
   theme_minimal()
 ```
-Now we can see that for vaccine 3, 5 and 6, no vaccine response data is available. Therefore, we can only look at the difference in high response abundancy between vaccine 1, 2 and 4. But also for vaccine 1 and 4 we notice that there are patients for whom no vaccine response data was available. 
+Now we can see that for vaccine 3, 5 and 6, no vaccine response data is available. Therefore, we can only look at the difference in high response abundancy between vaccine 1, 2 and 4. But also for vaccine 1 and 4 we notice that there are patients for whom no vaccine response data was available. This missing data could be due to various reasons, like as or patients not completing the follow-up. Given these limitations, we will exclude these NULLs from our analysis to ensure accuracy.
 
 ```{r}
 noNA_distinct_influenza <- distinct_data %>% filter(vaccine_response != "NULL")
@@ -188,6 +188,9 @@ geom_bar(position = "fill") +
 labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative response count", fill = "vaccine response") +
   theme_minimal()
 ```
+Now we can better evaluate a possible difference in high vaccine responses between vaccines 1, 2 and 4. 
+The amount of patients is very noticeably smaller compared to the vaccine 1 and vaccine 4 group. There where only 19 patients who received vaccine 2, while vaccine 1 and 4 got allocated to respectively 88 and 186. This is why we also discarded vaccine 2, the small size of this group could otherwise reduce the statistical power making it harder to detect true differences. While there is still a difference in patients between vaccine 1 and 4, we can use these two group and analyse their abundance of high vaccine responders using the Fisher test which is designed to handle small sample sizes and unbalanced groups and therefore doesn't rely on large sample sizes or equal group sizes. 
+
 **Fisher test**
 ```{r}
 contingency_table <- table(distinct_data$vaccine, distinct_data$vaccine_response)
@@ -199,13 +202,14 @@ contingency_table <- contingency_table[rownames(contingency_table) != "5", ]
 contingency_table <- contingency_table[rownames(contingency_table) != "3", ]
 contingency_table <- contingency_table[rownames(contingency_table) != "2", ]
 
+contingency_table <- contingency_table[, c("1", "0")]
 
 print(contingency_table)
 
 fisher.test(contingency_table)
 
 ```
-
+After creating a contingency table for vaccine type 1 and 4 and high vaccine response (1) and low vaccine response(0), we performed the Fisher's exact test for count data. This gave us an odds ratio of 1.67 (95CI: {0.91 ; 3.14}) with a P-value of 0.09. Here an OR of 1.67 means that the odds of having a high vaccine response are 1.67 times higher in group 4 compared to group 1. So while there is a difference in the amount of high vaccine responders between vaccine 1 and vaccine 4, this difference was not significant (p > 0.05). We are not able to discard the null hypothesis.
 
 
 ### Research question 2
