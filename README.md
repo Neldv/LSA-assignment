@@ -151,30 +151,38 @@ for (col in colnames(categorical_vars)) {
 ```
 
 #Research question 1: difference in vaccine response between vaccine type
+For this research question, we want to see if there is a difference in the abundance of a high vaccine response for the different vaccines that are given. Both the vaccine type and vaccine response are categorical variables. 
+
 ## visualisation
 ```{r}
 ggplot(distinct_data, aes(x = factor(vaccine, levels = c(1, 2, 3, 4, 5, 6, NA)), fill = vaccine_response)) +
   geom_bar(position = "stack") + # Use position = "dodge" for side-by-side bars
-  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y="respons count", fill = "vaccine respons") +
+  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y="response count", fill = "vaccine response") +
   theme_minimal()
+```
+We see that there is a big difference in the amount of patients allocated to the different vaccines. Therefore we will look at the relative response to visualize the differences in low and high vaccine response between the different vaccines. 
 
+```{r}
 distinct_data %>%
   ggplot(aes(x=factor(vaccine, levels = c(1, 2, 3, 4, 5, 6, NA)), fill = vaccine_response)) +
   geom_bar(position = "fill") +
-  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative respons count", fill = "vaccine respons") +
+  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative response count", fill = "vaccine response") +
   theme_minimal()
+```
+Now we can see that for vaccine 3, 5 and 6, no vaccine response data is available. Therefore, we can only look at the difference in high response abundancy between vaccine 1, 2 and 4. But also for vaccine 1 and 4 we notice that there are patients for whom no vaccine response data was available. 
 
+```{r}
 noNA_distinct_influenza <- distinct_data %>% filter(vaccine_response != "NULL")
 
 ggplot(noNA_distinct_influenza, aes(x = factor (vaccine,levels = c(1, 2, 4, NA)), fill = vaccine_response)) +
   geom_bar(position = "stack") + # Use position = "dodge" for side-by-side bars
-  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "respons count", fill = "vaccine respons") +
+  labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "response count", fill = "vaccine response") +
   theme_minimal()
 
 noNA_distinct_influenza %>%
 ggplot(aes(x=factor (vaccine,levels = c(1,2,4,NA)), fill = vaccine_response)) +
 geom_bar(position = "fill") +
-labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative respons count", fill = "vaccine respons") +
+labs(title = "High or Low vaccine response compaired to the different vaccine types", x = "vaccine type", y = "relative response count", fill = "vaccine response") +
   theme_minimal()
 ```
 ## Fisher test
