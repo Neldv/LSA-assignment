@@ -236,7 +236,8 @@ summary (cd4_bmi_df)
 
 some don't have data for bmi.
 ```{r}
-mean(is.na(cd4_bmi_df$bmi))
+cd4_bmi_cleaned <- cd4_bmi_gender[!is.na(cd4_bmi_gender$bmi), ]
+summary(cd4_bmi_cleaned)
 ```
 24.8% of the individuals with a measurement for CD4+ T cell have not reported their BMI. We suspect this is mostely due to reporting bias as some people don't know their length/weight or don't want to share it. 
 
@@ -252,7 +253,7 @@ We're going to take out all the individuals that miss the BMI value, as this is 
 
 ```{r}
 cd4_bmi_cleaned <- cd4_bmi_df[!is.na(cd4_bmi_df$bmi), ]
-summary(cd4_bmi_cleaned)
+summary(cd4_bmi_cleaned)  
 ```
 First we'll look at the range of the data. The maximum value for BMI is 46.89 and the minimum value is 13.12, both are plausible for BMI. the 'data' column, which contains the value for the percentage of parent cell population that is CD4 T cells, should be between 0 and 100, as its expressed in %. This is the case, so we conclude that neither column has outliers that are suspicious. Below, both distributions are visualised in a histogram.
 
