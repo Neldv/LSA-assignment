@@ -235,9 +235,8 @@ summary (cd4_bmi_df)
 ```
 
 some don't have data for bmi.
-```{r}
-cd4_bmi_cleaned <- cd4_bmi_gender[!is.na(cd4_bmi_gender$bmi), ]
-summary(cd4_bmi_cleaned)
+```{r} 
+mean(is.na(cd4_bmi_gender$bmi))
 ```
 24.8% of the individuals with a measurement for CD4+ T cell have not reported their BMI. We suspect this is mostely due to reporting bias as some people don't know their length/weight or don't want to share it. 
 
