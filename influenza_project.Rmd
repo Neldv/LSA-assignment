@@ -69,7 +69,7 @@ Remove duplications, as at this point, after removing the columns that made the 
 distinct_data <- distinct(influenza_data, donor_id, .keep_all = TRUE)
 distinct_data
 ```
-check if everything is good 
+check if everything is good, we will also save this dataframe as a csv so we can use it for machine learning using Python.
 ```{r}
 summary(distinct_data)
 ```
