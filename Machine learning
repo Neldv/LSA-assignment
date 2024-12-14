@@ -146,7 +146,7 @@ residualslg = y_test - logr_pred
 
 plt.figure(figsize=(8, 6))
 sns.histplot(residualslg, kde=True, color='blue', bins=30)
-plt.title("Residuals of Linear Regression Model")
+plt.title("Residuals of Logistic Regression Model")
 plt.xlabel("Residuals")
 plt.ylabel("Frequency")
 plt.tight_layout()
