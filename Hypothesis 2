@@ -1,0 +1,227 @@
+### Research question 2
+hypothesis 2 : Do BMI category and gender have an effect on the C T cell count?
+
+```{r}
+# Select columns from each dataframe
+
+cd4_data <- metadata_flu %>% filter(name_formatted == "CD4_pos_T_cells" )
+
+
+#All measurements for CD4 T cells are in the same unit : % of parent cell population, therefore we won't include this column in our new dataframe.
+cd4_df <- cd4_data %>% select(donor_id, name_formatted, data)
+bmi_gender<- distinct_data %>% select(donor_id, bmi, gender)
+
+# Merge the dataframes
+cd4_bmi_gender <- left_join(cd4_df, bmi_gender, by = "donor_id")
+
+# View the merged dataframe
+head(cd4_bmi_gender)
+summary (cd4_bmi_gender)
+```
+
+Some don't have data for bmi.
+```{r}
+mean(is.na(cd4_bmi_gender$bmi))
+```
+24.8% of the individuals with a measurement for CD4+ T cell have not reported their BMI. We suspect this is mostly due to reporting bias as some people don't know their length/weight or don't want to share it. 
+
+```{r}
+install.packages("naniar")  # If not already installed
+library(naniar)
+
+# Visualize missing values
+vis_miss(cd4_bmi_gender) 
+```
+
+We're going to take out all the individuals that miss the BMI value, as this is not useful for our hypothesis.
+
+```{r}
+cd4_bmi_cleaned <- cd4_bmi_gender[!is.na(cd4_bmi_gender$bmi), ]
+summary(cd4_bmi_cleaned)
+```
+First we'll look at the range of the data. The maximum value for BMI is 46.89 and the minimum value is 13.12, both are plausible for BMI. the 'data' column, which contains the value for the percentage of parent cell population that is CD4 T cells, should be between 0 and 100, as its expressed in %. This is the case, so we conclude that neither column has outliers that are suspicious. Below, both distributions are visualised in a histogram.
+
+
+```{r}
+cd4_bmi_cleaned%>%
+  ggplot(aes(x= bmi))+
+  geom_histogram(binwidth = 0.5, fill ='darkseagreen', color="black")+
+  labs(title = "Histogram of BMI", x = "BMI", y="Frequency")+
+  theme_minimal()
+```
+
+```{r}
+cd4_bmi_cleaned%>%
+  ggplot(aes(x= data))+
+  geom_histogram(binwidth = 0.5, fill ='darkseagreen4', color="black")+
+  labs(title = "Histogram of CD4+ T cell percentage of parent population in the patient", x = "CD4+ T cell percentage of parent population", y="Frequency")+
+  theme_minimal()
+```
+We're going to split the BMI numbers in groups according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25<= BMI)
+
+```{r}
+cd4_bmicat <- cd4_bmi_cleaned %>%
+  mutate(BMI_category = case_when(
+    bmi < 18.5 ~ "underweight",
+    bmi >= 18.5 & bmi < 25 ~ "healthy",
+    bmi >= 25 & bmi <30 ~ "overweight",
+    bmi>=30 ~ "obese"
+  ))
+
+
+cd4_bmicat$BMI_category<- as.factor(cd4_bmicat$BMI_category)
+head(cd4_bmicat)
+summary(cd4_bmicat)
+
+```
+
+In this hypothesis we are going to look at the effect of gender and BMI class on CD4 T cell percentage.
+In total we have 329 individuals in our dataframe. All observations are obtained from different individuals, therefore we can conclude that the groups are independent. 
+
+Below, we specified the variables.
+CD4: Dependent variable (continuous).
+BMI: Independent variable (categorical, ordinal).
+Gender: Independent variable (categorical, nominal).
+
+First, we fit a linear model to this
+
+```{r}
+model <- lm(data ~ bmi * gender, data = cd4_bmicat)
+summary (model)
+```
+```{r}
+cd4_bmicat$BMI_category <- relevel(cd4_bmicat$BMI_category, ref = "healthy")
+model <- lm(data ~ BMI_category * gender, data = cd4_bmicat)
+summary(model)
+```
+
+To test if the the model is significant as a whole, we'll use anove to compare models 
+
+
+
+The data needs to comply to certain conditions :
+- The data within each group is approximately normally distributed (can check with Q-Q plots or Shapiro-Wilk test).
+- Homogeneity of variances (can test using Levene’s test).
+
+Normality testing of the continuous variable
+
+```{r}
+install.packages("ggpubr")
+library(ggpubr)
+# plot for all data
+ggqqplot(cd4_bmicat$data)+
+  ggtitle("CD4 T cells percentage of parent population")
+```
+```{r}
+shapiro.test(cd4_bmicat$data)
+```
+p-value > 0.05: The data is approximately normal for that category.
+p-value ≤ 0.05: The data significantly deviates from normality.
+
+```{r}
+ggqqplot(cd4_bmicat, "data", ggtheme = theme_minimal()) +
+  facet_grid(BMI_category ~ gender) +
+  labs(title = "Q-Q Plots of CD4 Counts by BMI Class and Gender")
+```
+
+
+```{r}
+# 1) Center and spread of CD4 T cell count
+CD4_per_cat<-cd4_bmicat%>%
+  group_by(BMI_category)%>%
+  summarise(MeanData = mean(data),
+            sdData = sd(data))
+CD4_per_cat
+```
+```{r}
+bartlett.test(data ~ BMI_category, data = cd4_bmicat)
+```
+
+```{r}
+bartlett.test(data ~ gender, data = cd4_bmicat)
+```
+Interpreting the Results
+The Bartlett test produces:
+
+Statistic: Bartlett’s K-squared.
+
+p-value: Used to determine if variances are equal.
+
+Null Hypothesis (H₀): Variances across groups are equal.
+
+Alternative Hypothesis (H₁): At least one group has a different variance.
+
+Decision Rule:
+
+If p-value < 0.05, reject H₀ (variances are not equal).
+If p-value ≥ 0.05, fail to reject H₀ (variances are equal).
+
+
+The p value is higher than 0.05 (0.21), therefore we conclude that the variance is approximately equal across all categories.
+
+=> the conditions of normality and approximately equal variance are met => The anova test can be applied
+```{r}
+anova(model)
+```
+```{r}
+plot(model, which = 1, main = "Residuals vs. Fitted")
+```
+```{r}
+plot(model, which = 2, main = "Normal Q-Q Plot")
+```
+```{r}
+ggplot(cd4_bmicat, aes(x = BMI_category, y = data, fill = gender)) +
+  geom_boxplot() +
+  labs(
+    title = "CD4 Cell Count by BMI Class and Gender",
+    x = "BMI Class",
+    y = "CD4 Cell Count"
+  ) +
+  scale_fill_manual(values = c("Male" = "royalblue", "Female" = "pink")) +
+  theme_minimal()
+```
+```{r}
+ggplot(cd4_bmicat, aes(x = BMI_category, y = data, fill = gender)) +
+  stat_summary(fun = mean, geom = "bar", position = position_dodge()) +
+  labs(
+    title = "Mean CD4 Cell Count by BMI Class and Gender",
+    x = "BMI Class",
+    y = "Mean CD4 Cell Count"
+  ) +
+  scale_fill_manual(values = c("Male" = "blue", "Female" = "pink")) +
+  theme_minimal()
+```
+```{r}
+interaction.plot(
+  x.factor = cd4_bmicat$BMI_category,
+  trace.factor = cd4_bmicat$gender,
+  response = cd4_bmicat$data,
+  fun = mean,
+  col = c("blue", "pink"),
+  lty = 1,
+  type = "b",
+  legend = TRUE,
+  xlab = "BMI Class",
+  ylab = "Mean CD4 Count",
+  main = "Interaction Plot: BMI Class and Gender on CD4 Count"
+)
+```
+```{r}
+# Scatter plot with jitter
+ggplot(cd4_bmicat, aes(x = BMI_category, y = data, color = gender)) +
+  geom_jitter(width = 0.2, size = 3) +
+  labs(
+    title = "CD4 Cell Count by BMI Class and Gender",
+    x = "BMI Class",
+    y = "CD4 Cell Count"
+  ) +
+  scale_color_manual(values = c("Male" = "blue", "Female" = "pink")) +
+  theme_minimal()
+```
+
+Choosing the Visualization
+Box Plot: Useful for understanding the distribution of CD4 counts.
+Bar Plot: Best for comparing mean CD4 counts across groups.
+Interaction Plot: Highlights potential interactions between BMI class and Gender.
+Scatter Plot: Displays individual observations for detailed inspection.
+You can pick a visualization based on the story you want to tell or use multiple plots to explore different aspects of the data.
