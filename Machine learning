@@ -210,7 +210,7 @@ import matplotlib.pyplot as plt
 # Decision Tree Model
 decision_tree = DecisionTreeClassifier(random_state=42)
 decision_tree.fit(X_train, y_train)
-dt_pred = dt_clf.predict(X_test)
+dt_pred = deciison_tree.predict(X_test)
 
 # Evaluate the model
 print("Decision Tree Model Accuracy:", accuracy_score(y_test, dt_pred))
