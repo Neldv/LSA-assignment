@@ -26,7 +26,7 @@ mean(is.na(cd4_bmi_gender$bmi))
 24.8% of the individuals with a measurement for CD4+ T cell have not reported their BMI. We suspect this is mostly due to reporting bias as some people don't know their length/weight or don't want to share it. 
 
 ```{r}
-install.packages("naniar")  # If not already installed
+install.packages("naniar") 
 library(naniar)
 
 # Visualize missing values
@@ -39,7 +39,10 @@ We're going to take out all the individuals that miss the BMI value, as this is 
 cd4_bmi_cleaned <- cd4_bmi_gender[!is.na(cd4_bmi_gender$bmi), ]
 summary(cd4_bmi_cleaned)
 ```
-First we'll look at the range of the data. The maximum value for BMI is 46.89 and the minimum value is 13.12, both are plausible for BMI. the 'data' column, which contains the value for the percentage of parent cell population that is CD4 T cells, should be between 0 and 100, as its expressed in %. This is the case, so we conclude that neither column has outliers that are suspicious. Below, both distributions are visualised in a histogram.
+First we'll look at the range of the data. The maximum value for BMI is 46.89 and the minimum value is 13.12, both are plausible for BMI.
+ The 'data' column, which contains the value for the percentage of parent cell population that is CD4 T cells, should be between 0 and 100, as its expressed in %. 
+This is the case, so we conclude that neither column has outliers that are suspicious. 
+Below, both distributions are visualised in a histogram.
 
 
 ```{r}
@@ -57,7 +60,7 @@ cd4_bmi_cleaned%>%
   labs(title = "Histogram of CD4+ T cell percentage of parent population in the patient", x = "CD4+ T cell percentage of parent population", y="Frequency")+
   theme_minimal()
 ```
-We're going to split the BMI numbers in groups according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25<= BMI)
+We're going to split the BMI numbers in groups according to the universal standard : underweight (BMI>18.5), healthy(18.5=<BMI<25), overweight(25<=BMI<30) and obese (BMI>=30)
 
 ```{r}
 cd4_bmicat <- cd4_bmi_cleaned %>%
@@ -83,25 +86,25 @@ CD4: Dependent variable (continuous).
 BMI: Independent variable (categorical, ordinal).
 Gender: Independent variable (categorical, nominal).
 
-First, we fit a linear model to this
+First, we'll fit a linear model to this
 
 ```{r}
 model <- lm(data ~ bmi * gender, data = cd4_bmicat)
 summary (model)
 ```
+We want the healthy weight category to be the baseline.
+
 ```{r}
 cd4_bmicat$BMI_category <- relevel(cd4_bmicat$BMI_category, ref = "healthy")
 model <- lm(data ~ BMI_category * gender, data = cd4_bmicat)
 summary(model)
 ```
 
-To test if the the model is significant as a whole, we'll use anove to compare models 
+To test the significance of the predictors, an ANOVA test will be executed. 
 
-
-
-The data needs to comply to certain conditions :
+To be able to perform an ANOVA test, the data needs to comply to certain conditions :
 - The data within each group is approximately normally distributed (can check with Q-Q plots or Shapiro-Wilk test).
-- Homogeneity of variances (can test using Levene’s test).
+- Homogeneity of variances = homoscedasticity (can test using Levene’s test).
 
 Normality testing of the continuous variable
 
