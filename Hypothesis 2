@@ -184,17 +184,6 @@ ggplot(cd4_bmicat, aes(x = BMI_category, y = data, fill = gender)) +
   theme_minimal()
 ```
 ```{r}
-ggplot(cd4_bmicat, aes(x = BMI_category, y = data, fill = gender)) +
-  stat_summary(fun = mean, geom = "bar", position = position_dodge()) +
-  labs(
-    title = "Mean CD4 Cell Count by BMI Class and Gender",
-    x = "BMI Class",
-    y = "Mean CD4 Cell Count"
-  ) +
-  scale_fill_manual(values = c("Male" = "blue", "Female" = "pink")) +
-  theme_minimal()
-```
-```{r}
 interaction.plot(
   x.factor = cd4_bmicat$BMI_category,
   trace.factor = cd4_bmicat$gender,
@@ -209,22 +198,3 @@ interaction.plot(
   main = "Interaction Plot: BMI Class and Gender on CD4 Count"
 )
 ```
-```{r}
-# Scatter plot with jitter
-ggplot(cd4_bmicat, aes(x = BMI_category, y = data, color = gender)) +
-  geom_jitter(width = 0.2, size = 3) +
-  labs(
-    title = "CD4 Cell Count by BMI Class and Gender",
-    x = "BMI Class",
-    y = "CD4 Cell Count"
-  ) +
-  scale_color_manual(values = c("Male" = "blue", "Female" = "pink")) +
-  theme_minimal()
-```
-
-Choosing the Visualization
-Box Plot: Useful for understanding the distribution of CD4 counts.
-Bar Plot: Best for comparing mean CD4 counts across groups.
-Interaction Plot: Highlights potential interactions between BMI class and Gender.
-Scatter Plot: Displays individual observations for detailed inspection.
-You can pick a visualization based on the story you want to tell or use multiple plots to explore different aspects of the data.
