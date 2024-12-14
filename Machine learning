@@ -230,7 +230,7 @@ residuals_dt = y_test - dt_pred
 
 plt.figure(figsize=(8, 6))
 sns.histplot(residuals_dt, kde=True, color='blue', bins=30)
-plt.title("Residuals of Random forest model")
+plt.title("Residuals of Dicision Tree model")
 plt.xlabel("Residuals")
 plt.ylabel("Frequency")
 plt.tight_layout()
