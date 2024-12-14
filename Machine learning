@@ -2,7 +2,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -36,7 +37,15 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 
 
-
+##Random  forest
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import seaborn as sns
+import matplotlib.pyplot as plt
 ### RANDOM FOREST MODEL
 random_f = RandomForestClassifier(n_estimators=100, random_state=42)
 random_f.fit(X_train, y_train)
@@ -76,28 +85,67 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
-
-
-
-## LOGISTIC REGRESSION
-
+##logistic regression 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import seaborn as sns
 import matplotlib.pyplot as plt
+### RANDOM FOREST MODEL
+random_f = RandomForestClassifier(n_estimators=100, random_state=42)
+random_f.fit(X_train, y_train)
+rf_pred = random_f.predict(X_test)
 
-# Logistic Regression Model
-log_reg = LogisticRegression(max_iter=1000)
-log_reg.fit(X_train, y_train)
-logr_pred = log_reg.predict(X_test)
+# Evaluate the models
+print("Random Forest Model Accuracy:", accuracy_score(y_test, rf_pred))
+print("Random Forest Model Classification Report:\n", classification_report(y_test, rf_pred))
+
 
 # Calculate and print the evaluation metrics
-accuracy = accuracy_score(val_y, logreg_predictions)  # Accuracy
-conf_matrix = confusion_matrix(val_y, logreg_predictions)  # Confusion Matrix
-class_report = classification_report(val_y, logreg_predictions)  # Classification Report
+mseRF = mean_squared_error(y_test, rf_pred)  # Mean Squared Error
+maeRF = mean_absolute_error(y_test, rf_pred)  # Mean Absolute Error
+r2RF = r2_score(y_test, rf_pred)  # R-squared score
+
+print(f"Mean Squared Error RF: {mseRF:.2f}")
+print(f"Mean Absolute Error RF: {maeRF:.2f}")
+print(f"R-squared RF: {r2RF:.2f}")
+
+# Generate and plot the residuals (difference between actual and predicted values)
+residualsrf = y_test - rf_pred
+
+plt.figure(figsize=(8, 6))
+sns.histplot(residualsrf, kde=True, color='blue', bins=30)
+plt.title("Residuals of Random forest model")
+plt.xlabel("Residuals")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.show()
+
+# Confusion Matrix for Random Forest Model
+conf_matrix_rf = confusion_matrix(y_test, rf_pred)
+plt.figure(figsize=(10, 7))
+sns.heatmap(conf_matrix_rf, annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix for Random Forest')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.show()
+
+#logistic regression with more features
+
+# Train a Logistic Regression model (suitable for classification tasks)
+logreg_model = LogisticRegression(max_iter=1000)  # Initialize Logistic Regression model
+logreg_model.fit(X_train, y_train)  # Train the model using training data
+
+# Make predictions on the validation set
+logreg_predictions = logreg_model.predict(X_test)  # Predict the target variable for the validation set
+
+# Calculate and print the evaluation metrics
+accuracy = accuracy_score(y_test, logreg_predictions)  # Accuracy
+conf_matrix = confusion_matrix(y_test, logreg_predictions)  # Confusion Matrix
+class_report = classification_report(y_test, logreg_predictions)  # Classification Report
 
 print(f"Accuracy: {accuracy:.2f}")
 print("Confusion Matrix:")
@@ -108,73 +156,6 @@ print(class_report)
 # Feature Contributions (coefficients for Logistic Regression)
 feature_contributions = pd.DataFrame({
     'Feature': X_train.columns,
-    'Coefficient': log_reg.coef_[0]
-}).sort_values(by='Coefficient', ascending=False)
-
-print("\nFeature Contributions (Logistic Regression Coefficients):")
-print(feature_contributions)
-
-# Visualizing the feature contributions
-plt.figure(figsize=(10, 6))
-sns.barplot(x=feature_contributions['Coefficient'], y=feature_contributions['Feature'], palette='viridis')
-plt.title('Feature Contributions (Logistic Regression Coefficients)')
-plt.xlabel('Coefficient Value')
-plt.ylabel('Feature')
-plt.tight_layout()
-plt.show()
-
-plt.figure(figsize=(10, 7))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
-plt.title('Confusion Matrix for Logistic Regression')
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.show()
-
-
-# Calculate and print the evaluation metrics
-mse_lr = mean_squared_error(y_test, logr_pred)  # Mean Squared Error
-mae_lr = mean_absolute_error(y_test, logr_pred)  # Mean Absolute Error
-r2_lr = r2_score(y_test, logr_pred)  # R-squared score
-
-print(f"Mean Squared Error RF: {mse_lr:.2f}")
-print(f"Mean Absolute Error RF: {mae_lr:.2f}")
-print(f"R-squared RF: {r2_lr:.2f}")
-
-# Generate and plot the residuals (difference between actual and predicted values)
-residualslg = y_test - logr_pred
-
-
-plt.figure(figsize=(8, 6))
-sns.histplot(residualslg, kde=True, color='blue', bins=30)
-plt.title("Residuals of Logistic Regression Model")
-plt.xlabel("Residuals")
-plt.ylabel("Frequency")
-plt.tight_layout()
-plt.show()
-
-## logistic regression with more features
-
-# Train a Logistic Regression model (suitable for classification tasks)
-logreg_model = LogisticRegression(max_iter=1000)  # Initialize Logistic Regression model
-logreg_model.fit(train_X, train_y)  # Train the model using training data
-
-# Make predictions on the validation set
-logreg_predictions = logreg_model.predict(val_X)  # Predict the target variable for the validation set
-
-# Calculate and print the evaluation metrics
-accuracy = accuracy_score(val_y, logreg_predictions)  # Accuracy
-conf_matrix = confusion_matrix(val_y, logreg_predictions)  # Confusion Matrix
-class_report = classification_report(val_y, logreg_predictions)  # Classification Report
-
-print(f"Accuracy: {accuracy:.2f}")
-print("Confusion Matrix:")
-print(conf_matrix)
-print("Classification Report:")
-print(class_report)
-
-# Feature Contributions (coefficients for Logistic Regression)
-feature_contributions = pd.DataFrame({
-    'Feature': train_X.columns,
     'Coefficient': logreg_model.coef_[0]
 }).sort_values(by='Coefficient', ascending=False)
 
@@ -210,7 +191,7 @@ import matplotlib.pyplot as plt
 # Decision Tree Model
 decision_tree = DecisionTreeClassifier(random_state=42)
 decision_tree.fit(X_train, y_train)
-dt_pred = deciison_tree.predict(X_test)
+dt_pred = decision_tree.predict(X_test)
 
 # Evaluate the model
 print("Decision Tree Model Accuracy:", accuracy_score(y_test, dt_pred))
@@ -230,7 +211,7 @@ residuals_dt = y_test - dt_pred
 
 plt.figure(figsize=(8, 6))
 sns.histplot(residuals_dt, kde=True, color='blue', bins=30)
-plt.title("Residuals of Dicision Tree model")
+plt.title("Residuals of Random forest model")
 plt.xlabel("Residuals")
 plt.ylabel("Frequency")
 plt.tight_layout()
@@ -244,3 +225,7 @@ plt.title('Confusion Matrix for Decision Tree')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
+
+
+
+
