@@ -43,7 +43,7 @@ metadata_flu<- influenza_data %>%
 
 head(metadata_flu)
 ```
-We want to create a dataframe where the columns are the cell names and where the donor_id's are placed in the first column so we have a value for every person
+We want to create a dataframe where the column headers are the cell/protein names and below the values of the measurement, and where the donor_id's are placed in the first column so we have a value for every person
 ```{r}
 metadata_wide <- metadata_flu %>%
   pivot_wider(
@@ -54,7 +54,6 @@ metadata_wide <- metadata_flu %>%
 
 head(metadata_wide)
 ```
-
 
 Remove columns that lead to duplications in the original dataset from that dataset
 ```{r}
@@ -69,7 +68,7 @@ Remove duplications, as at this point, after removing the columns that made the 
 distinct_data <- distinct(influenza_data, donor_id, .keep_all = TRUE)
 distinct_data
 ```
-check if everything is good, we will also save this dataframe as a csv so we can use it for machine learning which is done in Python.
+Check if everything is good, we will also save this dataframe as a csv so we can use it for machine learning which is done in Python.
 ```{r}
 summary(distinct_data)
 ```
