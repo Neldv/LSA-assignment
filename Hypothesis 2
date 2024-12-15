@@ -86,6 +86,9 @@ CD4: Dependent variable (continuous).
 BMI: Independent variable (categorical, ordinal).
 Gender: Independent variable (categorical, nominal).
 
+
+
+
 First, we'll fit a linear model to this
 
 ```{r}
@@ -198,3 +201,41 @@ interaction.plot(
   main = "Interaction Plot: BMI Class and Gender on CD4 Count"
 )
 ```
+
+
+
+
+
+##OTHER APPROACH
+
+All values for CD4 T cell percentage , that are situated in the column 'data', are percentages lying between 0 and 100. For further use of the data, an additional column will be added where the percentages are given in decimals, so they all lie in between 0 and 1. 
+As the beta regression is made for dependent variables that can have any value between 0 and 1, the interaction model will be made using this.
+
+verify there are no strict 0 and strict 1 values 
+```{r}
+cd4_bmicat$cd4_proportion<- cd4_bmicat$data / 100
+summary(cd4_bmicat$cd4_proportion)
+```
+There are no strict 0 or strict 1 values so the beta regression can be applied
+
+
+```{r}
+
+library(betareg)
+beta_model <- betareg(cd4_proportion ~ BMI_category * gender, data = cd4_bmicat)
+summary(beta_model) 
+```
+Betaregression requires
+
+To test whether the predictors or interactions are significant, apart from the result of the beta regression, a likelihood ratio test will be performed
+
+```{r}
+reduced_model <- betareg(cd4_proportion ~ BMI_category + gender, data = cd4_bmicat)
+
+library(lmtest)
+
+lrtest(beta_model, reduced_model)
+```
+The p value is >0.05, this indicates that the interaction between gender and BMI category is not signficant.
+
+However, the chosen predictors only explain a little variance. Most of the variance is due to other factors. BMI category and gender are significant for CD4 T cell count, but only for the 7% of the variance it explains.
