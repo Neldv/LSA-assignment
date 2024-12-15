@@ -203,7 +203,7 @@ plt.tight_layout()
 plt.show()
 
 plt.figure(figsize=(10, 7))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
+sns.heatmap(conf_matrix_lr, annot=True, fmt='d', cmap='Blues')
 plt.title('Confusion Matrix for Logistic Regression')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
