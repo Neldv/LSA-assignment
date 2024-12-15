@@ -1,27 +1,36 @@
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error, r2_score, confusion_matrix, mean_squared_error
+from sklearn.datasets import make_classification
+from sklearn.metrics import roc_curve, auc
+
+
+
+## Load dataset and preprocess
 
 # Load the dataset
 data = pd.read_csv('/kaggle/input/data-project/our-project.csv')
 
-# Define the feature columns and target column
-feature_columns = ['visit_age', 'bmi', 'geo_mean', 'd_geo_mean']
+# Define the initial feature columns and target column
+initial_feature_columns = ['visit_age', 'bmi', 'geo_mean', 'd_geo_mean']
 target_column = 'vaccine_response'
 
 # Convert categorical columns to numeric using one-hot encoding
 data = pd.get_dummies(data, columns=['gender', 'race', 'cmv_status', 'ebv_status', 'statin_use'], drop_first=True)
 
+# Update the feature columns to include the new one-hot encoded columns
+feature_columns = initial_feature_columns + [col for col in data.columns if col.startswith(('gender_', 'race_', 'cmv_status_', 'ebv_status_', 'statin_use_'))]
+
 # Drop rows where the target variable 'vaccine_response' is NaN (missing values)
 data_cleaned = data.dropna(subset=[target_column])
 
 # Fill missing values for numerical columns with the mean
-for column in feature_columns:
+for column in initial_feature_columns:
     data_cleaned[column].fillna(data_cleaned[column].mean(), inplace=True)
 
 # Fill missing values for categorical columns with the most frequent value
@@ -32,20 +41,13 @@ for column in data_cleaned.columns:
 # Split the data into features (X) and target (y)
 X = data_cleaned[feature_columns]
 y = data_cleaned[target_column]
+
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 
 
-##Random  forest
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import seaborn as sns
-import matplotlib.pyplot as plt
+## RANDOM FOREST 
 ### RANDOM FOREST MODEL
 random_f = RandomForestClassifier(n_estimators=100, random_state=42)
 random_f.fit(X_train, y_train)
@@ -54,7 +56,6 @@ rf_pred = random_f.predict(X_test)
 # Evaluate the models
 print("Random Forest Model Accuracy:", accuracy_score(y_test, rf_pred))
 print("Random Forest Model Classification Report:\n", classification_report(y_test, rf_pred))
-
 
 # Calculate and print the evaluation metrics
 mseRF = mean_squared_error(y_test, rf_pred)  # Mean Squared Error
@@ -85,78 +86,108 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
-##logistic regression 
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import seaborn as sns
-import matplotlib.pyplot as plt
-### RANDOM FOREST MODEL
-random_f = RandomForestClassifier(n_estimators=100, random_state=42)
-random_f.fit(X_train, y_train)
-rf_pred = random_f.predict(X_test)
+
+# Predict probabilities
+y_probs = random_f.predict_proba(X_test)[:, 1]
+
+# Compute ROC curve and AUC
+fpr, tpr, thresholds = roc_curve(y_test, y_probs)
+roc_auc = auc(fpr, tpr)
+
+# Plot ROC curve
+plt.figure()
+plt.plot(fpr, tpr, color='blue', label=f'AUC = {roc_auc:.2f}')
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic for Logistic Regression')
+plt.legend(loc="lower right")
+plt.show()
+
+
+# Get feature importances
+rf_importances = random_f.feature_importances_
+
+# Create a DataFrame to hold feature names and their corresponding importance
+rf_feature_importance = pd.DataFrame({
+    'Feature': X_train.columns,
+    'Importance': rf_importances
+})
+
+# Sort features by importance
+rf_feature_importance = rf_feature_importance.sort_values(by='Importance', ascending=False)
+
+# Plot the feature importances
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Importance', y='Feature', data=rf_feature_importance, palette='viridis')
+plt.title("Feature Importance from Random Forest Model")
+plt.tight_layout()
+plt.show()
+
+
+##LOGISTIC REGRESSION 
+## LOGISTIC REGRESSION
+log_reg = LogisticRegression(max_iter=1000)
+log_reg.fit(X_train, y_train)
+logr_pred = log_reg.predict(X_test)
 
 # Evaluate the models
-print("Random Forest Model Accuracy:", accuracy_score(y_test, rf_pred))
-print("Random Forest Model Classification Report:\n", classification_report(y_test, rf_pred))
-
+print("Logistic Regression Model Accuracy:", accuracy_score(y_test, logr_pred))
+print("Logistic Regression Model Classification Report:\n", classification_report(y_test, logr_pred))
 
 # Calculate and print the evaluation metrics
-mseRF = mean_squared_error(y_test, rf_pred)  # Mean Squared Error
-maeRF = mean_absolute_error(y_test, rf_pred)  # Mean Absolute Error
-r2RF = r2_score(y_test, rf_pred)  # R-squared score
+mse_lr = mean_squared_error(y_test, logr_pred)  # Mean Squared Error
+mae_lr = mean_absolute_error(y_test, logr_pred)  # Mean Absolute Error
+r2_lr = r2_score(y_test, logr_pred)  # R-squared score
 
-print(f"Mean Squared Error RF: {mseRF:.2f}")
-print(f"Mean Absolute Error RF: {maeRF:.2f}")
-print(f"R-squared RF: {r2RF:.2f}")
+print(f"Mean Squared Error LR: {mse_lr:.2f}")
+print(f"Mean Absolute Error LR: {mae_lr:.2f}")
+print(f"R-squared LR: {r2_lr:.2f}")
 
 # Generate and plot the residuals (difference between actual and predicted values)
-residualsrf = y_test - rf_pred
+residualslg = y_test - logr_pred
 
 plt.figure(figsize=(8, 6))
-sns.histplot(residualsrf, kde=True, color='blue', bins=30)
-plt.title("Residuals of Random forest model")
+sns.histplot(residualslg, kde=True, color='blue', bins=30)
+plt.title("Residuals of Logistic Regression Model")
 plt.xlabel("Residuals")
 plt.ylabel("Frequency")
 plt.tight_layout()
 plt.show()
 
-# Confusion Matrix for Random Forest Model
-conf_matrix_rf = confusion_matrix(y_test, rf_pred)
+# Confusion Matrix for Logistic Regression Model
+conf_matrix_lr = confusion_matrix(y_test, logr_pred)
 plt.figure(figsize=(10, 7))
-sns.heatmap(conf_matrix_rf, annot=True, fmt='d', cmap='Blues')
-plt.title('Confusion Matrix for Random Forest')
+sns.heatmap(conf_matrix_lr, annot=True, fmt='d', cmap='Blues')
+plt.title('Confusion Matrix for Logistic Regression')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
-#logistic regression with more features
+# Predict probabilities
+y_probs = log_reg.predict_proba(X_test)[:, 1]
 
-# Train a Logistic Regression model (suitable for classification tasks)
-logreg_model = LogisticRegression(max_iter=1000)  # Initialize Logistic Regression model
-logreg_model.fit(X_train, y_train)  # Train the model using training data
+# Compute ROC curve and AUC
+fpr, tpr, thresholds = roc_curve(y_test, y_probs)
+roc_auc = auc(fpr, tpr)
 
-# Make predictions on the validation set
-logreg_predictions = logreg_model.predict(X_test)  # Predict the target variable for the validation set
+# Plot ROC curve
+plt.figure()
+plt.plot(fpr, tpr, color='blue', label=f'AUC = {roc_auc:.2f}')
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic for Logistic Regression')
+plt.legend(loc="lower right")
+plt.show()
 
-# Calculate and print the evaluation metrics
-accuracy = accuracy_score(y_test, logreg_predictions)  # Accuracy
-conf_matrix = confusion_matrix(y_test, logreg_predictions)  # Confusion Matrix
-class_report = classification_report(y_test, logreg_predictions)  # Classification Report
 
-print(f"Accuracy: {accuracy:.2f}")
-print("Confusion Matrix:")
-print(conf_matrix)
-print("Classification Report:")
-print(class_report)
+
 
 # Feature Contributions (coefficients for Logistic Regression)
 feature_contributions = pd.DataFrame({
     'Feature': X_train.columns,
-    'Coefficient': logreg_model.coef_[0]
+    'Coefficient': log_reg.coef_[0]
 }).sort_values(by='Coefficient', ascending=False)
 
 print("\nFeature Contributions (Logistic Regression Coefficients):")
@@ -178,16 +209,7 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
-
-## Decision tree
-
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import seaborn as sns
-import matplotlib.pyplot as plt
-
+## DECISION TREE
 # Decision Tree Model
 decision_tree = DecisionTreeClassifier(random_state=42)
 decision_tree.fit(X_train, y_train)
@@ -211,7 +233,7 @@ residuals_dt = y_test - dt_pred
 
 plt.figure(figsize=(8, 6))
 sns.histplot(residuals_dt, kde=True, color='blue', bins=30)
-plt.title("Residuals of Random forest model")
+plt.title("Residuals of Decision Tree model")
 plt.xlabel("Residuals")
 plt.ylabel("Frequency")
 plt.tight_layout()
@@ -226,6 +248,40 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
+# Predict probabilities
+y_probs = decision_tree.predict_proba(X_test)[:, 1]
+
+# Compute ROC curve and AUC
+fpr, tpr, thresholds = roc_curve(y_test, y_probs)
+roc_auc = auc(fpr, tpr)
+
+# Plot ROC curve
+plt.figure()
+plt.plot(fpr, tpr, color='blue', label=f'AUC = {roc_auc:.2f}')
+plt.plot([0, 1], [0, 1], color='gray', linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic for Logistic Regression')
+plt.legend(loc="lower right")
+plt.show()
 
 
 
+# Get feature importances
+dt_importances = decision_tree.feature_importances_
+
+# Create a DataFrame to hold feature names and their corresponding importance
+dt_feature_importance = pd.DataFrame({
+    'Feature': X_train.columns,
+    'Importance': dt_importances
+})
+
+# Sort features by importance
+dt_feature_importance = dt_feature_importance.sort_values(by='Importance', ascending=False)
+
+# Plot the feature importances
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Importance', y='Feature', data=dt_feature_importance, palette='viridis')
+plt.title("Feature Importance from Decision Tree Model")
+plt.tight_layout()
+plt.show()
